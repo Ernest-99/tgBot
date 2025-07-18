@@ -1,6 +1,8 @@
-package org.example.javabot;
+package org.example.javabot.bot;
 
 import lombok.SneakyThrows;
+import org.example.javabot.user.Role;
+import org.example.javabot.user.UserService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
@@ -20,26 +22,49 @@ import java.util.List;
 public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
     private final TelegramClient telegramClient;
+    private final UserService userService;
 
-    public UpdateConsumer(@Value("${telegram.bot.token}") String botToken) {
+    public UpdateConsumer(@Value("${telegram.bot.token}") String botToken, UserService userService) {
         this.telegramClient = new OkHttpTelegramClient(botToken);
+        this.userService = userService;
     }
 
     @SneakyThrows
     @Override
     public void consume(Update update) {
-        if(update.hasMessage()){
-            String messageText = update.getMessage().getText();
-            Long chatId = update.getMessage().getChatId();
+        Long chatId = update.getMessage().getChatId();
+        String text = update.getMessage().getText();
 
-            if(messageText.equals("/start")){
-                sendMainMenu(chatId);
-            }else {
-                sendMessage(chatId, "Я вас не понимаю");
+        if ("/start".equals(text)) {
+            // Приветствие по роли
+            Role role = userService.getOrCreateUser(chatId).getRole();
+            String welcomeMessage = "Вы вошли как: " + role;
+            sendMessage(chatId, welcomeMessage);
+            // отправка сообщения
+        } else if ("/upload".equals(text)) {
+            if (userService.isAdmin(chatId)) {
+                // логика загрузки Excel
+            } else {
+                // отказ в доступе
             }
-        }else if(update.hasCallbackQuery()){
-            handleCallbackQuery(update.getCallbackQuery());
+        } else {
+            // обычная логика
         }
+
+
+//        if(update.hasMessage()){
+//            String messageText = update.getMessage().getText();
+//            Long chatId = update.getMessage().getChatId();
+//
+//            if(messageText.equals("/start")){
+//                sendMainMenu(chatId);
+//            }else {
+//                sendMessage(chatId, "Я вас не понимаю");
+//                System.out.println(chatId);
+//            }
+//        }else if(update.hasCallbackQuery()){
+//            handleCallbackQuery(update.getCallbackQuery());
+//        }
 
     }
 

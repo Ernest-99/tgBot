@@ -1,4 +1,4 @@
-package org.example.javabot;
+package org.example.javabot.bot;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
