@@ -1,25 +1,24 @@
 package org.example.javabot.bot;
 
+import org.example.javabot.config.BotConfig;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
-import org.springframework.beans.factory.annotation.Value;
 
 @Component
 public class MyTelegramBot implements SpringLongPollingBot{
 
-    private final String botToken;
-
+    private final BotConfig botConfig;
     private final UpdateConsumer updateConsumer;
 
-    public MyTelegramBot(@Value("${telegram.bot.token}") String botToken, UpdateConsumer updateConsumer) {
-        this.botToken = botToken;
+    public MyTelegramBot(BotConfig botConfig, UpdateConsumer updateConsumer) {
+        this.botConfig = botConfig;
         this.updateConsumer = updateConsumer;
     }
 
     @Override
     public String getBotToken() {
-        return botToken;
+        return botConfig.getBotToken();
     }
 
     @Override

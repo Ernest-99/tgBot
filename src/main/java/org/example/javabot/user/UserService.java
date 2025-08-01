@@ -13,7 +13,7 @@ public class UserService {
 
     // Задать роли вручную
     public UserService() {
-        users.put(1086068083L, new BotUser(1086068083L, Role.AMDIN)); // пример chatId админа
+        users.put(1086068083L, new BotUser(1086068083L, Role.ADMIN)); // пример chatId админа
     }
 
     public BotUser getOrCreateUser(Long chatId) {
@@ -21,11 +21,11 @@ public class UserService {
     }
 
     public boolean isAdmin(Long chatId) {
-        return getOrCreateUser(chatId).getRole() == Role.AMDIN;
+        return getOrCreateUser(chatId).getRole() == Role.ADMIN;
     }
 
     public void promoteToAdmin(Long chatId) {
-        getOrCreateUser(chatId).setRole(Role.AMDIN);
+        getOrCreateUser(chatId).setRole(Role.ADMIN);
     }
 
     public void demoteToUser(Long chatId) {

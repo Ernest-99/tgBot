@@ -1,6 +1,6 @@
 package org.example.javabot.user;
 
 public enum Role {
-    AMDIN,
+    ADMIN,
     USER
 }
