@@ -35,12 +35,14 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
             if (messageText != null && messageText.equals("/start")) {
                 Role role = userService.getOrCreateUser(chatId).getRole();
-                commandHandler.sendMessage(chatId, "Вы вошли как: " + role);
+                //commandHandler.sendMessage(chatId, "Вы вошли как: " + role);
 
                 if (role == Role.ADMIN) {
                     menuService.sendMenu(chatId);
+                    menuService.sendKeyboard(chatId);
                 } else {
                     menuService.sendMenu(chatId);
+                    menuService.sendKeyboard(chatId);
                 }
             } else if (update.getMessage().hasDocument()) {
                 // Обработка Excel, например админ загрузил файл
@@ -48,7 +50,13 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
                 if (document.getFileName().endsWith(".xlsx")) {
                     commandHandler.processExcelFile(chatId, document);
                 }
-            } else {
+            }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
+                commandHandler.sendMessage(chatId, "Принято");
+                commandHandler.setTypeSchedule(false);
+            }else if(messageText != null && messageText.equals("Получать расписание на неделю")){
+                commandHandler.sendMessage(chatId, "Принято");
+                commandHandler.setTypeSchedule(true);
+            }  else {
                 commandHandler.sendMessage(chatId, "Я вас не понимаю");
             }
 

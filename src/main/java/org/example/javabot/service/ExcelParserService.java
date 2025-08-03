@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
@@ -20,41 +21,67 @@ import java.time.LocalDate;
 @Service
 public class ExcelParserService {
 
-//    public void parseExcel(File file) {
-//        try (FileInputStream fis = new FileInputStream(file);
-//             XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
-//
-//            XSSFSheet sheet = workbook.getSheetAt(0); // Первый лист
-//            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm"); // Формат для времени
-//
-//            for (Row row : sheet) {
-//                for (Cell cell : row) {
-//                    switch (cell.getCellType()) {
-//                        case STRING -> System.out.print(cell.getStringCellValue() + "\t");
-//
-//                        case NUMERIC -> {
-//                            if (DateUtil.isCellDateFormatted(cell)) {
-//                                String time = timeFormat.format(cell.getDateCellValue());
-//                                System.out.print(time + "\t");
-//                            } else {
-//                                System.out.print(cell.getNumericCellValue() + "\t");
-//                            }
-//                        }
-//
-//                        case BOOLEAN -> System.out.print(cell.getBooleanCellValue() + "\t");
-//
-//                        default -> System.out.print("?\t");
-//                    }
-//                }
-//                System.out.println(); // Перенос строки
-//            }
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    public String getScheduleByGroupForWeek(File file, String groupName) {
+        StringBuilder result = new StringBuilder();
 
-    public String getScheduleByGroup(File file, String groupName) {
+        try (FileInputStream fis = new FileInputStream(file);
+             XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
+
+            XSSFSheet sheet = workbook.getSheet(groupName);
+            if (sheet == null) {
+                return "❌ Не найден лист с названием группы: " + groupName;
+            }
+
+            Row headerRow = sheet.getRow(1); // строка с названиями дней
+            if (headerRow == null) return "⚠️ Расписание не заполнено!";
+
+            // Преобразуем названия дней в карту: имя дня -> индекс колонки
+            Map<String, Integer> dayColumnMap = new LinkedHashMap<>();
+            for (int i = 1; i < headerRow.getLastCellNum(); i++) {
+                Cell cell = headerRow.getCell(i);
+                if (cell != null) {
+                    String dayName = getCellValueAsString(cell);
+                    if (!dayName.isEmpty()) {
+                        dayColumnMap.put(dayName, i);
+                    }
+                }
+            }
+
+            result.append("📅 Расписание на неделю для группы: ").append(groupName).append("\n\n");
+
+            for (Map.Entry<String, Integer> entry : dayColumnMap.entrySet()) {
+                String day = entry.getKey();
+                int colIndex = entry.getValue();
+
+                result.append("📌 ").append(day).append(":\n");
+
+                for (int i = 2; i <= sheet.getLastRowNum(); i++) {
+                    Row row = sheet.getRow(i);
+                    if (row == null) continue;
+
+                    Cell timeCell = row.getCell(0);
+                    Cell lessonCell = row.getCell(colIndex);
+
+                    String time = getCellValueAsString(timeCell);
+                    String lesson = getCellValueAsString(lessonCell);
+
+                    if (!time.isEmpty() && !lesson.isEmpty()) {
+                        result.append("⏰ ").append(time).append(" — ").append(lesson).append("\n");
+                    }
+                }
+
+                result.append("\n"); // пустая строка между днями
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "❗ Ошибка при чтении файла.";
+        }
+
+        return result.toString();
+    }
+
+    public String getScheduleByGroupToday(File file, String groupName) {
         StringBuilder result = new StringBuilder();
         try (FileInputStream fis = new FileInputStream(file);
              XSSFWorkbook workbook = new XSSFWorkbook(fis)) {
@@ -75,8 +102,7 @@ public class ExcelParserService {
                     "Вторник", 2,
                     "Среда", 3,
                     "Четверг", 4,
-                    "Пятница", 5,
-                    "Суббота", 6
+                    "Пятница", 5
             );
 
             String todayName = getRussianDay(today);
@@ -98,7 +124,7 @@ public class ExcelParserService {
                 String lesson = getCellValueAsString(lessonCell);
 
                 if (!time.isEmpty() && !lesson.isEmpty()) {
-                    result.append(time).append(" — ").append(lesson).append("\n");
+                    result.append("⏰ ").append(time).append(" — ").append(lesson).append("\n");
                 }
             }
 
@@ -117,7 +143,6 @@ public class ExcelParserService {
             case WEDNESDAY -> "Среда";
             case THURSDAY -> "Четверг";
             case FRIDAY -> "Пятница";
-            case SATURDAY -> "Суббота";
             default -> "";
         };
     }

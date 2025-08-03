@@ -34,11 +34,19 @@ public class CommandHandler {
         this.menuService = menuService;
     }
 
+    public void setTypeSchedule(boolean typeSchedule) {
+        this.typeSchedule = typeSchedule;
+    }
+
+    private boolean typeSchedule = false; // По умслчанию получает расписание на сегодня = false
+
     private final Map<Long, Set<String>> userCoursesMap = new HashMap<>();
 
     public void handleCallbackQuery(CallbackQuery callbackQuery) {
         var data = callbackQuery.getData();
         var chatId = callbackQuery.getFrom().getId();
+
+
 
         // 2. Если выбран курс:
         String fileName1 = switch (data) {
@@ -65,16 +73,30 @@ public class CommandHandler {
                     fullSchedule.append("❌ Файл не найден: ").append(fileName).append("\n\n");
                     continue;
                 }
+                String schedule;
+                if (typeSchedule){
+                    schedule = excelParserService.getScheduleByGroupForWeek(file, groupName);
+                }else {
+                    schedule = excelParserService.getScheduleByGroupToday(file, groupName);
+                }
 
-                String schedule = excelParserService.getScheduleByGroup(file, groupName);
+
+                String course = switch (fileName) {
+                    case "1course.xlsx" -> "1 курс";
+                    case "2course.xlsx" -> "2 курс";
+                    case "3course.xlsx" -> "3 курс";
+                    default -> null;
+                };
+
                 if(!schedule.isEmpty() && !schedule.equals("❌ Не найден лист с названием группы: " + groupName)) {
-                    fullSchedule.append("📘 ").append(fileName).append("\n").append(schedule).append("\n\n");
+                    fullSchedule.append("📘 ").append(course).append("\n").append(schedule).append("\n\n");
                 }
 
             }
 
             if(fullSchedule.isEmpty()){
-                sendMessage(chatId, "Выбранная группа не соответствует курсу!");
+                sendMessage(chatId, "Выбранная группа не соответствует курсу, пожалуйста сначала выберите курс.");
+                menuService.sendMenu(chatId);
             }else {
                 sendMessage(chatId, fullSchedule.toString());
             }
@@ -86,7 +108,7 @@ public class CommandHandler {
         if (fileName1 != null) {
             // Добавляем курс в список выбранных
             userCoursesMap.computeIfAbsent(chatId, k -> new HashSet<>()).add(fileName1);
-            sendMessage(chatId, "✅ Курс добавлен: " + fileName1 + "\nТеперь выберите группу.");
+            //sendMessage(chatId, "✅ Курс добавлен: " + fileName1 + "\nТеперь выберите группу.");
             sendGroupSelectionMenu(chatId, new File("courses/" + fileName1)); // Показываем кнопки с группами
         } else {
             sendMessage(chatId, "Неизвестная команда.");

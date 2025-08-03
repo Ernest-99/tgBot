@@ -7,8 +7,10 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,31 @@ public class MenuService {
         this.botConfig = botConfig;
         this.telegramClient = new OkHttpTelegramClient(botConfig.getBotToken());
         this.excelParserService = excelParserService;
+    }
+
+    @SneakyThrows
+    public void sendKeyboard(Long chatId) {
+        SendMessage message = SendMessage.builder()
+                .text("Вы можете выбрать тип расписания, по умолчанию стоит на сегодня)")
+                .chatId(chatId)
+                .build();
+
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add("Получать расписание на сегодня");
+        row1.add("Получать расписание на неделю ");
+        keyboardRows.add(row1);
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = ReplyKeyboardMarkup.builder()
+                .keyboard(keyboardRows)
+                .resizeKeyboard(true)  // делает кнопки компактнее
+                .oneTimeKeyboard(false)
+                .build();
+
+        message.setReplyMarkup(replyKeyboardMarkup);
+
+        telegramClient.execute(message);
     }
 
     //Кнопки курсов, показывает при запуске бота
