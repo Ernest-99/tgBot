@@ -38,18 +38,28 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
                 //commandHandler.sendMessage(chatId, "Вы вошли как: " + role);
 
                 if (role == Role.ADMIN) {
-                    menuService.sendMenu(chatId);
-                    menuService.sendKeyboard(chatId);
+                    menuService.sendAdminMenu(chatId);
                 } else {
                     menuService.sendMenu(chatId);
                     menuService.sendKeyboard(chatId);
                 }
             } else if (update.getMessage().hasDocument()) {
-                // Обработка Excel, например админ загрузил файл
-                Document document = update.getMessage().getDocument();
-                if (document.getFileName().endsWith(".xlsx")) {
-                    commandHandler.processExcelFile(chatId, document);
+                // Проверка роли перед обработкой Excel
+                Role role = userService.getOrCreateUser(chatId).getRole();
+
+                if (role == Role.ADMIN) {
+                    Document document = update.getMessage().getDocument();
+                    String fileName = document.getFileName();
+
+                    if (fileName.equals("1course.xlsx") || fileName.equals("2course.xlsx") || fileName.equals("3course.xlsx")) {
+                        commandHandler.processExcelFile(chatId, document);
+                    } else {
+                        commandHandler.sendMessage(chatId, "❗ Разрешена загрузка только файлов: 1course.xlsx, 2course.xlsx, 3course.xlsx");
+                    }
+                } else {
+                    commandHandler.sendMessage(chatId, "❌ Только администратор может загружать файлы.");
                 }
+
             }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
                 commandHandler.sendMessage(chatId, "Принято");
                 commandHandler.setTypeSchedule(false);
@@ -63,20 +73,5 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
         } else if (update.hasCallbackQuery()) {
             commandHandler.handleCallbackQuery(update.getCallbackQuery());
         }
-
-//        if(update.hasMessage()){
-//            String messageText = update.getMessage().getText();
-//            Long chatId = update.getMessage().getChatId();
-//
-//            if(messageText.equals("/start")){
-//                sendMainMenu(chatId);
-//            }else {
-//                sendMessage(chatId, "Я вас не понимаю");
-//                System.out.println(chatId);
-//            }
-//        }else if(update.hasCallbackQuery()){
-//            handleCallbackQuery(update.getCallbackQuery());
-//        }
-
     }
 }

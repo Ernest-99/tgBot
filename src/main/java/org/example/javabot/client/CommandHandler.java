@@ -115,6 +115,26 @@ public class CommandHandler {
         }
     }
 
+    public boolean handleCallbackQueryForAdmin(CallbackQuery callbackQuery , String fileName) {
+        var data = callbackQuery.getData();
+        var chatId = callbackQuery.getFrom().getId();
+
+        switch (data) {
+            case "schedule_first_course" -> sendMessage(chatId, "Ожидаю документ");
+            case "schedule_second_course" -> sendMessage(chatId, "Ожидаю документ");
+            case "schedule_third_course" -> sendMessage(chatId, "Ожидаю документ");
+            default -> sendMessage(chatId, "Неизвестная команда");
+        };
+
+        sendMessage(chatId, "Ожидаю документ");
+
+        if (fileName.equals("1course.xlsx") || fileName.equals("2course.xlsx") || fileName.equals("3course.xlsx")) {
+            // Обработка Excel, например админ загрузил файл
+            return true;
+        }
+        return false;
+    }
+
     @SneakyThrows
     public void sendMessage(Long chatId, String messageText) {
         SendMessage message = SendMessage.builder().text(messageText).chatId(chatId).build();
