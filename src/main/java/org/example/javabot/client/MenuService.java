@@ -28,6 +28,7 @@ public class MenuService {
         this.excelParserService = excelParserService;
     }
 
+    //Кнопки выбора типа расписаний
     @SneakyThrows
     public void sendKeyboard(Long chatId) {
         SendMessage message = SendMessage.builder()
@@ -94,5 +95,27 @@ public class MenuService {
         }
 
         return new InlineKeyboardMarkup(keyboardRows);
+    }
+
+    //Кнопки для админа
+    @SneakyThrows
+    public void sendAdminMenu(Long chatId) {
+        SendMessage message = SendMessage.builder().text("Добро пожаловать! вы являетесь администратором)").chatId(chatId).build();
+
+        var button1 = InlineKeyboardButton.builder().text("Загрузить расписание 1-го курса").callbackData("schedule_first_course").build();
+        var button2 = InlineKeyboardButton.builder().text("Загрузить расписание 2-го курса").callbackData("schedule_second_course").build();
+        var button3 = InlineKeyboardButton.builder().text("Загрузить расписание 3-го курса").callbackData("schedule_third_course").build();
+
+        List<InlineKeyboardRow> keyboardRows = List.of(
+                new InlineKeyboardRow(button1),
+                new InlineKeyboardRow(button2),
+                new InlineKeyboardRow(button3)
+        );
+
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup(keyboardRows);
+
+        message.setReplyMarkup(markup);
+
+        telegramClient.execute(message);
     }
 }
