@@ -1,6 +1,5 @@
 package org.example.javabot.bot;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.example.javabot.client.CommandHandler;
@@ -14,75 +13,25 @@ import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateC
 import org.telegram.telegrambots.meta.api.objects.Document;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
-
 
 @Component
-@RequiredArgsConstructor
 public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
-    private final CommandHandler commandHandler;
-    private final MenuService menuService;
     private final UserService userService;
-
-    private final Map<String, BiConsumer<UserEntity, String>> textCommands = new HashMap<>();
     private final UserServiceEntity userServiceEntity;
+    private final MenuService menuService;
+    private final CommandHandler commandHandler;
 
-    @PostConstruct
-    private void initCommands() {
-        textCommands.put("/start", (user, msg) -> {
-            if (user.getRole() == Role.ADMIN) {
-                menuService.sendAdminMenu(user.getChatId());
-            } else {
-                menuService.sendMenu(user.getChatId());
-                menuService.sendKeyboard(user.getChatId());
-            }
-        });
+    public UpdateConsumer(UserService userService, UserServiceEntity userServiceEntity, CommandHandler commandHandler, MenuService menuService) {
+        this.userService = userService;
+        this.userServiceEntity = userServiceEntity;
+        this.commandHandler = commandHandler;
+        this.menuService = menuService;
 
-        textCommands.put("Получать расписание на сегодня", (user, msg) -> {
-            commandHandler.sendMessage(user.getChatId(), "Принято");
-            commandHandler.setTypeSchedule(false);
-        });
-
-        textCommands.put("Получать расписание на неделю", (user, msg) -> {
-            commandHandler.sendMessage(user.getChatId(), "Принято");
-            commandHandler.setTypeSchedule(true);
-        });
-
-        // 🔹 Пример шестого пункта
-        textCommands.put("Показать контакт администратора", (user, msg) -> {
-            commandHandler.sendMessage(user.getChatId(), "Контакт администратора: @admin_username");
-        });
     }
 
-    @SneakyThrows
-    @Override
-    public void consume(Update update) {
-        if (update.hasMessage()) {
-            String messageText = update.getMessage().getText();
-            Long chatId = update.getMessage().getChatId();
 
-            // ✅ получаем пользователя с userName
-            UserEntity user = userServiceEntity.getOrCreateUser(chatId, update.getMessage().getFrom().getUserName());
-
-            if (update.getMessage().hasDocument()) {
-                handleDocument(update, user);
-                return;
-            }
-
-            if (messageText != null && textCommands.containsKey(messageText)) {
-                textCommands.get(messageText).accept(user, messageText);
-            } else {
-                commandHandler.sendMessage(chatId, "Я вас не понимаю");
-            }
-
-        } else if (update.hasCallbackQuery()) {
-            commandHandler.handleCallbackQuery(update.getCallbackQuery());
-        }
-    }
-
+    //Загрузка документа с расписанием
     private void handleDocument(Update update, UserEntity user) {
         if (user.getRole() != Role.ADMIN) {
             commandHandler.sendMessage(user.getChatId(), "❌ У вас нет прав загружать файлы!");
@@ -97,6 +46,48 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
         } else {
             commandHandler.sendMessage(user.getChatId(),
                     "❗ Разрешена загрузка только файлов: 1course.xlsx, 2course.xlsx, 3course.xlsx");
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public void consume(Update update) {
+
+        if (update.hasMessage()) {
+            String messageText = update.getMessage().getText();
+            Long chatId = update.getMessage().getChatId();
+
+
+            if (messageText != null && messageText.equals("/start")) {
+                menuService.sendMenu(chatId);
+                menuService.sendKeyboard(chatId);
+                UserEntity user = userServiceEntity.getOrCreateUser(chatId, update.getMessage().getFrom().getUserName());
+
+
+//                Role role = userService.getOrCreateUser(chatId).getRole();
+//                commandHandler.sendMessage(chatId, "Вы вошли как: " + role);
+//                if (role == Role.ADMIN) {
+//                    menuService.sendAdminMenu(chatId);
+//                } else {
+//                    menuService.sendMenu(chatId);
+//                    menuService.sendKeyboard(chatId);
+//                }
+            } else if (update.getMessage().hasDocument()) {
+
+                //handleDocument(update, user);
+
+            }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
+                commandHandler.sendMessage(chatId, "Принято");
+                commandHandler.setTypeSchedule(false);
+            }else if(messageText != null && messageText.equals("Получать расписание на неделю")){
+                commandHandler.sendMessage(chatId, "Принято");
+                commandHandler.setTypeSchedule(true);
+            }  else {
+                commandHandler.sendMessage(chatId, "Я вас не понимаю");
+            }
+
+        } else if (update.hasCallbackQuery()) {
+            commandHandler.handleCallbackQuery(update.getCallbackQuery());
         }
     }
 }
