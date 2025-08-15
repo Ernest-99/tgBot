@@ -1,13 +1,11 @@
 package org.example.javabot.bot;
 
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.example.javabot.client.CommandHandler;
 import org.example.javabot.client.MenuService;
-import org.example.javabot.entity.UserEntity;
-import org.example.javabot.service.UserServiceEntity;
+import org.example.javabot.user.entity.UserEntity;
+import org.example.javabot.user.serviec.UserService;
 import org.example.javabot.user.Role;
-import org.example.javabot.user.UserService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Document;
@@ -18,13 +16,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
     private final UserService userService;
-    private final UserServiceEntity userServiceEntity;
     private final MenuService menuService;
     private final CommandHandler commandHandler;
 
-    public UpdateConsumer(UserService userService, UserServiceEntity userServiceEntity, CommandHandler commandHandler, MenuService menuService) {
+    public UpdateConsumer(UserService userService, UserService userServiceEntity, CommandHandler commandHandler, MenuService menuService) {
         this.userService = userService;
-        this.userServiceEntity = userServiceEntity;
         this.commandHandler = commandHandler;
         this.menuService = menuService;
 
@@ -61,7 +57,8 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             if (messageText != null && messageText.equals("/start")) {
                 menuService.sendMenu(chatId);
                 menuService.sendKeyboard(chatId);
-                UserEntity user = userServiceEntity.getOrCreateUser(chatId, update.getMessage().getFrom().getUserName());
+                UserEntity user = userService.getOrCreateUser(chatId, update.getMessage().getFrom().getUserName(),
+                        update.getMessage().getFrom().getFirstName(),update.getMessage().getFrom().getLastName());
 
 
 //                Role role = userService.getOrCreateUser(chatId).getRole();
@@ -78,10 +75,10 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
             }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
                 commandHandler.sendMessage(chatId, "Принято");
-                commandHandler.setTypeSchedule(false);
+                userService.setScheduleType(chatId, 0);
             }else if(messageText != null && messageText.equals("Получать расписание на неделю")){
                 commandHandler.sendMessage(chatId, "Принято");
-                commandHandler.setTypeSchedule(true);
+                userService.setScheduleType(chatId, 1);
             }  else {
                 commandHandler.sendMessage(chatId, "Я вас не понимаю");
             }
