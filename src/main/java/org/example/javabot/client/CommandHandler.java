@@ -3,6 +3,8 @@ package org.example.javabot.client;
 import lombok.SneakyThrows;
 import org.example.javabot.config.BotConfig;
 import org.example.javabot.service.ExcelParserService;
+import org.example.javabot.user.entity.UserEntity;
+import org.example.javabot.user.repositories.UserRepository;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -27,18 +29,15 @@ public class CommandHandler {
     private ExcelParserService excelParserService;
     private final MenuService menuService;
 
-    public CommandHandler(BotConfig botConfig, ExcelParserService excelParserService, MenuService menuService) {
+    private final UserRepository userRepository;
+
+    public CommandHandler(BotConfig botConfig, ExcelParserService excelParserService, MenuService menuService, UserRepository userRepository) {
         this.botConfig = botConfig;
         this.telegramClient = new OkHttpTelegramClient(botConfig.getBotToken());
         this.excelParserService = excelParserService;
         this.menuService = menuService;
+        this.userRepository = userRepository;
     }
-
-    public void setTypeSchedule(boolean typeSchedule) {
-        this.typeSchedule = typeSchedule;
-    }
-
-    private boolean typeSchedule = false; // По умслчанию получает расписание на сегодня = false
 
     private final Map<Long, Set<String>> userCoursesMap = new HashMap<>();
 
@@ -74,7 +73,12 @@ public class CommandHandler {
                     continue;
                 }
                 String schedule;
-                if (typeSchedule){
+
+                int scheduleType = userRepository.findByChatId(chatId)
+                        .map(UserEntity::getScheduleType)
+                        .orElse(0);
+
+                if (scheduleType == 1){
                     schedule = excelParserService.getScheduleByGroupForWeek(file, groupName);
                 }else {
                     schedule = excelParserService.getScheduleByGroupToday(file, groupName);
@@ -115,25 +119,6 @@ public class CommandHandler {
         }
     }
 
-    public boolean handleCallbackQueryForAdmin(CallbackQuery callbackQuery , String fileName) {
-        var data = callbackQuery.getData();
-        var chatId = callbackQuery.getFrom().getId();
-
-        switch (data) {
-            case "schedule_first_course" -> sendMessage(chatId, "Ожидаю документ");
-            case "schedule_second_course" -> sendMessage(chatId, "Ожидаю документ");
-            case "schedule_third_course" -> sendMessage(chatId, "Ожидаю документ");
-            default -> sendMessage(chatId, "Неизвестная команда");
-        };
-
-        sendMessage(chatId, "Ожидаю документ");
-
-        if (fileName.equals("1course.xlsx") || fileName.equals("2course.xlsx") || fileName.equals("3course.xlsx")) {
-            // Обработка Excel, например админ загрузил файл
-            return true;
-        }
-        return false;
-    }
 
     @SneakyThrows
     public void sendMessage(Long chatId, String messageText) {

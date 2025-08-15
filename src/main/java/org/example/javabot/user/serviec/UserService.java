@@ -52,4 +52,12 @@ public class UserService {
         });
     }
 
+    @Transactional
+    public void setStudentGroup(Long chatId, int shceduleType) {
+        userRepository.findByChatId(chatId).ifPresent(user -> {
+            user.setScheduleType(shceduleType);
+            userRepository.save(user);
+        });
+    }
+
 }
