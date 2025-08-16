@@ -9,6 +9,7 @@ import org.example.javabot.user.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 
 @Service
@@ -58,6 +59,16 @@ public class UserService {
             user.setScheduleType(shceduleType);
             userRepository.save(user);
         });
+    }
+
+    public Role getUserRole(Long chatId) {
+        Optional<UserEntity> optionalUser = userRepository.findByChatId(chatId);
+        if (optionalUser.isPresent()) {
+            UserEntity user = optionalUser.get();
+            return user.getRole();
+        } else {
+            return null; // или можно бросить исключение
+        }
     }
 
 }
