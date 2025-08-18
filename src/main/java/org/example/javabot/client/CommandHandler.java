@@ -45,7 +45,9 @@ public class CommandHandler {
         var data = callbackQuery.getData();
         var chatId = callbackQuery.getFrom().getId();
 
-
+        if(data.equals("set_admin")){
+            sendMessage(chatId, "Отправьте имя пользователя, которого хотите назначить администратором (например @enika_kg)");
+        }
 
         // 2. Если выбран курс:
         String fileName1 = switch (data) {
@@ -84,7 +86,6 @@ public class CommandHandler {
                     schedule = excelParserService.getScheduleByGroupToday(file, groupName);
                 }
 
-
                 String course = switch (fileName) {
                     case "1course.xlsx" -> "1 курс";
                     case "2course.xlsx" -> "2 курс";
@@ -95,7 +96,6 @@ public class CommandHandler {
                 if(!schedule.isEmpty() && !schedule.equals("❌ Не найден лист с названием группы: " + groupName)) {
                     fullSchedule.append("📘 ").append(course).append("\n").append(schedule).append("\n\n");
                 }
-
             }
 
             if(fullSchedule.isEmpty()){

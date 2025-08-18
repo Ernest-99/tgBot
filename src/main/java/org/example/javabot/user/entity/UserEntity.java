@@ -28,5 +28,6 @@ public class UserEntity {
 
     private int scheduleType;
 
-    private LocalDateTime registeredAt;
+    private LocalDateTime registeredDate;
+
 }

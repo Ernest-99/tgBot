@@ -34,27 +34,21 @@ public class UserService {
                     newUser.setFullName(firstName + " " + lastName);
                     newUser.setRole(Role.USER);
                     newUser.setStatus(Status.ACTIVE);
-                    newUser.setRegisteredAt(LocalDateTime.now());
+                    newUser.setRegisteredDate(LocalDateTime.now());
                     return userRepository.save(newUser);
                 });
     }
-
-    public void setRole(Long chatId, Role role) {
-        userRepository.findById(chatId).ifPresent(user -> {
-            user.setRole(role);
-            userRepository.save(user);
+    @Transactional
+    public void setAdminRole(String username) {
+        userRepository.findByUsername(username).ifPresent(user -> {
+            if ( user.getUsername().equals(username)){
+                user.setRole(Role.ADMIN);
+                userRepository.save(user);
+            }
         });
     }
     @Transactional
     public void setScheduleType(Long chatId, int shceduleType) {
-        userRepository.findByChatId(chatId).ifPresent(user -> {
-            user.setScheduleType(shceduleType);
-            userRepository.save(user);
-        });
-    }
-
-    @Transactional
-    public void setStudentGroup(Long chatId, int shceduleType) {
         userRepository.findByChatId(chatId).ifPresent(user -> {
             user.setScheduleType(shceduleType);
             userRepository.save(user);

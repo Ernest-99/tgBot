@@ -69,6 +69,10 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
                 handleDocument(update, chatId);
 
+            } else if (messageText != null && messageText.startsWith("@") && role == Role.ADMIN) {
+                String username = messageText.substring(1);
+                userService.setAdminRole(username);
+
             }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
                 commandHandler.sendMessage(chatId, "Принято) \nВыберите группу!");
                 userService.setScheduleType(chatId, 0);
