@@ -18,14 +18,14 @@ import java.io.File;
 import java.util.List;
 
 @Component
-public class CallbackHandle {
+public class CommandHandle {
     private  final TelegramClient telegramClient;
     private final BotConfig botConfig;
     private final MenuService menuService;
     private final UserRepository userRepository;
-    private ExcelParserService excelParserService;
+    private final ExcelParserService excelParserService;
 
-    public CallbackHandle(BotConfig botConfig, MenuService menuService, ExcelParserService excelParserService, UserRepository userRepository) {
+    public CommandHandle(BotConfig botConfig, MenuService menuService, ExcelParserService excelParserService, UserRepository userRepository) {
         this.botConfig = botConfig;
         this.telegramClient = new OkHttpTelegramClient(botConfig.getBotToken());
         this.menuService = menuService;
@@ -36,7 +36,6 @@ public class CallbackHandle {
     public void handleCallback(CallbackQuery callbackQuery) {
         var data = callbackQuery.getData();
         var chatId = callbackQuery.getFrom().getId();
-        var messageId = callbackQuery.getMessage().getMessageId();
         var callbackQueryId = callbackQuery.getId();
 
         // Обработка выбора курса
@@ -55,8 +54,7 @@ public class CallbackHandle {
             sendMessage(chatId, "Неизвестная команда.");
         }
     }
-
-
+    //Выбор курсов -> покажет группы
     private void handleCourseSelection(String callbackQueryId, String data, Long chatId){
         try {
             // 1. Сначала отвечаем на callback (убираем индикатор загрузки)
@@ -81,6 +79,7 @@ public class CallbackHandle {
             e.printStackTrace();
         }
     }
+    //Выбор группы -> покажет расписание в зависемости от типа расписания
     private void handleGroupSelection(String callbackQueryId, String data, Long chatId) {
         try {
             answerCallbackQuery(callbackQueryId);
