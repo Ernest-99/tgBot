@@ -47,7 +47,7 @@ public class ExcelParserService {
                 }
             }
 
-            result.append("📅 Расписание на неделю для группы: ").append(groupName).append("\n\n");
+            result.append("\n");
 
             for (Map.Entry<String, Integer> entry : dayColumnMap.entrySet()) {
                 String day = entry.getKey();
@@ -109,7 +109,6 @@ public class ExcelParserService {
             Integer colIndex = dayColumnMap.get(todayName);
             if (colIndex == null) return "🎉 Сегодня выходной!";
 
-            result.append("🗓️ Группа: ").append(groupName).append("\n");
             result.append("📅 День: == ").append(todayName).append(" ==\n\n");
 
             // Расписание с 3 строки (индекса 2)
