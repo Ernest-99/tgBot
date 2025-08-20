@@ -1,6 +1,7 @@
 package org.example.javabot.bot;
 
 import lombok.SneakyThrows;
+import org.example.javabot.client.CallbacHandle;
 import org.example.javabot.client.CommandHandler;
 import org.example.javabot.client.MenuService;
 import org.example.javabot.user.entity.UserEntity;
@@ -19,12 +20,14 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     private final UserService userService;
     private final MenuService menuService;
     private final CommandHandler commandHandler;
+    private final CallbacHandle callbacHandle;
 
-    public UpdateConsumer(UserService userService, UserService userServiceEntity, CommandHandler commandHandler, MenuService menuService) {
+    public UpdateConsumer(UserService userService, CommandHandler commandHandler, MenuService menuService, CallbacHandle callbacHandle) {
         this.userService = userService;
         this.commandHandler = commandHandler;
         this.menuService = menuService;
 
+        this.callbacHandle = callbacHandle;
     }
 
 
@@ -84,7 +87,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             }
 
         } else if (update.hasCallbackQuery()) {
-            commandHandler.handleCallbackQuery(update.getCallbackQuery());
+            callbacHandle.handleCallback(update.getCallbackQuery());
         }
     }
 }

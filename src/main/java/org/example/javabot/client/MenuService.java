@@ -60,9 +60,9 @@ public class MenuService {
         // сделай меню для обычного пользователя
         SendMessage message = SendMessage.builder().text("Добро пожаловать! Выберите курс: ").chatId(chatId).build();
 
-        var button1 = InlineKeyboardButton.builder().text("1 курс").callbackData("first_course").build();
-        var button2 = InlineKeyboardButton.builder().text("2 курс").callbackData("second_course").build();
-        var button3 = InlineKeyboardButton.builder().text("3 курс").callbackData("third_course").build();
+        var button1 = InlineKeyboardButton.builder().text("1 курс").callbackData("course_first").build();
+        var button2 = InlineKeyboardButton.builder().text("2 курс").callbackData("course_second").build();
+        var button3 = InlineKeyboardButton.builder().text("3 курс").callbackData("course_third").build();
 
         List<InlineKeyboardRow> keyboardRows = List.of(
                 new InlineKeyboardRow(button1),
