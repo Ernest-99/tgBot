@@ -1,11 +1,9 @@
 package org.example.javabot.bot;
 
 import lombok.SneakyThrows;
-import org.example.javabot.client.CallbacHandle;
+import org.example.javabot.client.CallbackHandle;
 import org.example.javabot.client.CommandHandler;
 import org.example.javabot.client.MenuService;
-import org.example.javabot.user.entity.UserEntity;
-import org.example.javabot.user.repositories.UserRepository;
 import org.example.javabot.user.serviec.UserService;
 import org.example.javabot.user.Role;
 import org.springframework.stereotype.Component;
@@ -20,14 +18,13 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     private final UserService userService;
     private final MenuService menuService;
     private final CommandHandler commandHandler;
-    private final CallbacHandle callbacHandle;
+    private final CallbackHandle callbackHandle;
 
-    public UpdateConsumer(UserService userService, CommandHandler commandHandler, MenuService menuService, CallbacHandle callbacHandle) {
+    public UpdateConsumer(UserService userService, CommandHandler commandHandler, MenuService menuService, CallbackHandle callbackHandle) {
         this.userService = userService;
         this.commandHandler = commandHandler;
         this.menuService = menuService;
-
-        this.callbacHandle = callbacHandle;
+        this.callbackHandle = callbackHandle;
     }
 
 
@@ -87,7 +84,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             }
 
         } else if (update.hasCallbackQuery()) {
-            callbacHandle.handleCallback(update.getCallbackQuery());
+            callbackHandle.handleCallback(update.getCallbackQuery());
         }
     }
 }

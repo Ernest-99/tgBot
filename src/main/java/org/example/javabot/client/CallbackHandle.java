@@ -3,6 +3,8 @@ package org.example.javabot.client;
 import lombok.SneakyThrows;
 import org.example.javabot.config.BotConfig;
 import org.example.javabot.service.ExcelParserService;
+import org.example.javabot.user.entity.UserEntity;
+import org.example.javabot.user.repositories.UserRepository;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -16,17 +18,19 @@ import java.io.File;
 import java.util.List;
 
 @Component
-public class CallbacHandle {
+public class CallbackHandle {
     private  final TelegramClient telegramClient;
     private final BotConfig botConfig;
     private final MenuService menuService;
+    private final UserRepository userRepository;
     private ExcelParserService excelParserService;
 
-    public CallbacHandle(BotConfig botConfig, MenuService menuService, ExcelParserService excelParserService) {
+    public CallbackHandle(BotConfig botConfig, MenuService menuService, ExcelParserService excelParserService, UserRepository userRepository) {
         this.botConfig = botConfig;
         this.telegramClient = new OkHttpTelegramClient(botConfig.getBotToken());
         this.menuService = menuService;
         this.excelParserService = excelParserService;
+        this.userRepository = userRepository;
     }
 
     public void handleCallback(CallbackQuery callbackQuery) {
@@ -40,8 +44,8 @@ public class CallbacHandle {
             handleCourseSelection(callbackQueryId, data, chatId);
         }
         // Обработка выбора группы
-        else if (data.startsWith("group_")) {
-            //handleGroupSelection(callbackQuery, data);
+        else if (data.startsWith("GROUP_")) {
+            handleGroupSelection(callbackQueryId, data, chatId);
         }
         // Обработка других действий
         else if (data.startsWith("action_")) {
@@ -75,6 +79,58 @@ public class CallbacHandle {
             // В случае ошибки тоже отвечаем на callback
             answerCallbackQuery(callbackQueryId);
             e.printStackTrace();
+        }
+    }
+    private void handleGroupSelection(String callbackQueryId, String data, Long chatId) {
+        try {
+            answerCallbackQuery(callbackQueryId);
+
+            String groupName = data.substring("GROUP_".length());
+
+            // Получаем тип расписания
+            int scheduleType = userRepository.findByChatId(chatId)
+                    .map(UserEntity::getScheduleType)
+                    .orElse(0);
+            // Ищем группу во всех трех курсах
+            boolean found = false;
+
+            for (Course course : Course.values()) {
+                try {
+                    String schedule;
+                    File courseFile = course.getFile();
+
+                    if (scheduleType == 1) {
+                        schedule = excelParserService.getScheduleByGroupForWeek(courseFile, groupName);
+                    } else {
+                        schedule = excelParserService.getScheduleByGroupToday(courseFile, groupName);
+                    }
+
+                    // Проверяем, что расписание найдено и не содержит ошибок
+                    if (schedule != null && !schedule.trim().isEmpty() &&
+                            !schedule.contains("❌ Не найден") &&
+                            !schedule.contains("не найдена")) {
+
+                        String message = "📘 " + course.getDisplayName() +
+                                "\n👥 Группа " + groupName +
+                                "\n" + schedule;
+                        sendMessage(chatId, message);
+                        found = true;
+                        break; // Прерываем цикл после нахождения
+                    }
+                } catch (Exception e) {
+                    // Продолжаем поиск в следующем курсе при ошибке
+                    continue;
+                }
+            }
+            // Если ни в одном курсе не нашли
+            if (!found) {
+                sendMessage(chatId, "❌ Группа \"" + groupName + "\" не найдена ни в одном курсе\n\n" +
+                        "Проверьте правильность написания группы");
+            }
+        } catch (Exception e) {
+            answerCallbackQuery(callbackQueryId);
+            e.printStackTrace();
+            sendMessage(chatId, "⚠️ Произошла ошибка. Попробуйте позже.");
         }
     }
 
