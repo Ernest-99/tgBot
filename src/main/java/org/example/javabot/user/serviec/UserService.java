@@ -39,13 +39,22 @@ public class UserService {
                 });
     }
     @Transactional
-    public void setAdminRole(String username) {
-        userRepository.findByUsername(username).ifPresent(user -> {
-            if ( user.getUsername().equals(username)){
-                user.setRole(Role.ADMIN);
-                userRepository.save(user);
-            }
-        });
+    public boolean setAdminRole(String username) {
+        Optional<UserEntity> userOptional = userRepository.findByUsername(username);
+
+        if (userOptional.isEmpty()) {
+            return false; // Пользователь не найден
+        }
+
+        UserEntity user = userOptional.get();
+
+        if (user.getRole() == Role.ADMIN) {
+            return false; // Уже является админом
+        }
+
+        user.setRole(Role.ADMIN);
+        userRepository.save(user);
+        return true; // Успешно обновлено
     }
     @Transactional
     public void setScheduleType(Long chatId, int shceduleType) {

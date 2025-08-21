@@ -1,9 +1,9 @@
 package org.example.javabot.bot;
 
 import lombok.SneakyThrows;
-import org.example.javabot.client.CallbackHandle;
-import org.example.javabot.client.CommandHandler;
+import org.example.javabot.client.CommandHandle;
 import org.example.javabot.client.MenuService;
+import org.example.javabot.service.AddScheduleDocument;
 import org.example.javabot.user.serviec.UserService;
 import org.example.javabot.user.Role;
 import org.springframework.stereotype.Component;
@@ -17,14 +17,16 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
     private final UserService userService;
     private final MenuService menuService;
-    private final CommandHandler commandHandler;
-    private final CallbackHandle callbackHandle;
+    private final CommandHandle commandHandler;
+    private final CommandHandle commandHandle;
+    private final AddScheduleDocument addScheduleDocument;
 
-    public UpdateConsumer(UserService userService, CommandHandler commandHandler, MenuService menuService, CallbackHandle callbackHandle) {
+    public UpdateConsumer(UserService userService, CommandHandle commandHandler, MenuService menuService, CommandHandle commandHandle, AddScheduleDocument addScheduleDocument) {
         this.userService = userService;
         this.commandHandler = commandHandler;
         this.menuService = menuService;
-        this.callbackHandle = callbackHandle;
+        this.commandHandle = commandHandle;
+        this.addScheduleDocument = addScheduleDocument;
     }
 
 
@@ -35,7 +37,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
         String fileName = document.getFileName();
 
         if (fileName.equals("1course.xlsx") || fileName.equals("2course.xlsx") || fileName.equals("3course.xlsx")) {
-            commandHandler.processExcelFile(chatId, document);
+            addScheduleDocument.processExcelFile(chatId, document);
         } else {
             commandHandler.sendMessage(chatId,
                     "❗ Разрешена загрузка только файлов: 1course.xlsx, 2course.xlsx, 3course.xlsx");
@@ -71,7 +73,11 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
             } else if (messageText != null && messageText.startsWith("@") && role == Role.ADMIN) {
                 String username = messageText.substring(1);
-                userService.setAdminRole(username);
+                if(userService.setAdminRole(username)){
+                    commandHandler.sendMessage(chatId, "Пользователь @"+username+" назначен администратором");
+                }else{
+                    commandHandler.sendMessage(chatId, "Пользователя нет в БД, либо не корректный @"+username);
+                }
 
             }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
                 commandHandler.sendMessage(chatId, "Принято) \nВыберите группу!");
@@ -84,7 +90,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
             }
 
         } else if (update.hasCallbackQuery()) {
-            callbackHandle.handleCallback(update.getCallbackQuery());
+            commandHandle.handleCallback(update.getCallbackQuery());
         }
     }
 }
