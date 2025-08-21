@@ -101,9 +101,11 @@ public class MenuService {
     @SneakyThrows
     public void sendAdminMenu(Long chatId) {
         SendMessage message = SendMessage.builder().text("Вы являетесь администратором и можете загружать расписание, а также выдавать админ права другим пользователям").chatId(chatId).build();
-        var button1 = InlineKeyboardButton.builder().text("Назначить Администратора").callbackData("set_admin").build();
+        var button1 = InlineKeyboardButton.builder().text("Назначить Администратора").callbackData("admin_set_admin").build();
+        var button2 = InlineKeyboardButton.builder().text("Загрузить расписание").callbackData("admin_download_schedule").build();
         List<InlineKeyboardRow> keyboardRows = List.of(
-                new InlineKeyboardRow(button1)
+                new InlineKeyboardRow(button1),
+                new InlineKeyboardRow(button2)
         );
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(keyboardRows);

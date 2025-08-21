@@ -47,8 +47,8 @@ public class CommandHandle {
             handleGroupSelection(callbackQueryId, data, chatId);
         }
         // Обработка других действий
-        else if (data.startsWith("action_")) {
-            //handleAction(callbackQuery, data);
+        else if (data.startsWith("admin_")) {
+            handleAdminAction(callbackQueryId, data,chatId);
         }
         else {
             sendMessage(chatId, "Неизвестная команда.");
@@ -133,7 +133,25 @@ public class CommandHandle {
         }
     }
 
-    // Вспомогательный метод для ответа на callback, чтобы убарть индикатор загрузки
+    private void handleAdminAction(String callbackQueryId, String data, Long chatId){
+        try {
+            // 1. Сначала отвечаем на callback (убираем индикатор загрузки)
+            answerCallbackQuery(callbackQueryId);
+
+            // 2. Затем обрабатываем логику
+            switch (data) {
+                case "admin_set_admin" -> sendMessage(chatId,"Отправьте имя пользователя, например @enika_kg");
+                case "admin_download_schedule" -> sendMessage(chatId,"Ожидаю Exel документ");
+                default -> sendMessage(chatId,"Неизвестная команда");
+            };
+        }catch (Exception e){
+            // В случае ошибки тоже отвечаем на callback
+            answerCallbackQuery(callbackQueryId);
+            e.printStackTrace();
+        }
+    }
+
+    // Вспомогательный метод для ответа на callback, чтобы убрать индикатор загрузки
     private void answerCallbackQuery(String callbackQueryId) {
         AnswerCallbackQuery answer = new AnswerCallbackQuery(callbackQueryId);
         try {

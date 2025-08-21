@@ -73,7 +73,11 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
             } else if (messageText != null && messageText.startsWith("@") && role == Role.ADMIN) {
                 String username = messageText.substring(1);
-                userService.setAdminRole(username);
+                if(userService.setAdminRole(username)){
+                    commandHandler.sendMessage(chatId, "Пользователь @"+username+" назначен администратором");
+                }else{
+                    commandHandler.sendMessage(chatId, "Пользователя нет в БД, либо не корректный @"+username);
+                }
 
             }else if(messageText != null && messageText.equals("Получать расписание на сегодня")){
                 commandHandler.sendMessage(chatId, "Принято) \nВыберите группу!");
